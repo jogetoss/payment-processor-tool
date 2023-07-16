@@ -1,0 +1,196 @@
+[
+    {
+        "title": "Configure Paypal Payment Link Element",
+        "properties": [
+            
+            {
+               "name":"paymentMethod",
+               "label":"@@org.joget.marketplace.paymentprocessor.paymentMethod@@",
+               "type":"selectbox",
+               "required":"True",
+               "options":[
+                  {
+                    "value": "",
+                    "label": ""
+                  },   
+                  {
+                     "value":"STRIPE",
+                     "label":"Stripe"
+                  },
+                  {
+                     "value":"PAYPAL",
+                     "label":"Paypal"
+                  }
+               ]
+            },
+                
+            {
+                "name": "environment",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.environment@@",
+                "type": "selectbox",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL",
+                "options": [
+                    {
+                        "value": "",
+                        "label": ""
+                    },
+                    {
+                        "value": "SANDBOX",
+                        "label": "Sandbox"
+                    },
+                    {
+                        "value": "LIVE",
+                        "label": "Live"
+                    }
+                ]
+            },
+
+            {
+                "name": "clientId",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.clientId@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "clientSecret",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.clientSecret@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtFormDefId",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.formDefId@@",
+                "type": "selectbox",
+                "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtAcknowledge",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.acknowledge@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtCurrency",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.currency@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtAmount",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.amount@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtInvoiceNo",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.invoiceNo@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name": "pmtDesciption",
+                "label": "@@org.joget.marketplace.paymentprocessortool.paypal.desciption@@",
+                "type": "textfield",
+                "required": "True",
+                "control_field":"paymentMethod",
+                "control_value":"PAYPAL"
+            },
+            {
+                "name":"apiKey",
+                "label":"@@org.joget.marketplace.paymentprocessor.apiKey@@",
+                "type":"textfield",
+                "required":"True",
+                "control_field": "paymentMethod",
+                "control_value": "STRIPE"
+            },
+            {
+               "name":"formDefId",
+               "label":"@@org.joget.marketplace.paymentprocessor.formDefId@@",
+               "type":"selectbox",
+               "required":"True",
+               "options_ajax":"[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"stripeFields",
+               "label": "@@org.joget.marketplace.paymentprocessor.stripeFields@@",
+               "type":"Header",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"productName",
+               "label":"@@org.joget.marketplace.paymentprocessor.productName@@",
+               "type":"textfield",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+           },
+           {
+               "name":"currency",
+               "label":"@@org.joget.marketplace.paymentprocessor.currency@@",
+               "type":"textfield",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"unitAmount",
+               "label":"@@org.joget.marketplace.paymentprocessor.unitAmount@@",
+               "type":"textfield",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"quantity",
+               "label":"@@org.joget.marketplace.paymentprocessor.quantity@@",
+               "type":"textfield",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"redirectDetails",
+               "label": "@@org.joget.marketplace.paymentprocessor.redirectDetails@@",
+               "type":"Header",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"redirectUserviewMenu",
+               "label":"@@org.joget.marketplace.paymentprocessor.redirectUserviewMenu@@",
+               "type":"selectbox",
+               "options_ajax":"[CONTEXT_PATH]/web/json/console/app[APP_PATH]/userview/options",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            },
+            {
+               "name":"redirectUserviewMenuFormID",
+               "label":"@@org.joget.marketplace.paymentprocessor.redirectUserviewMenuFormID@@",
+               "type":"textfield",
+               "control_field": "paymentMethod",
+               "control_value": "STRIPE"
+            }
+        ]
+    }
+]
+
+
+
+
+
+

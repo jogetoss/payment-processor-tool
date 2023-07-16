@@ -1,6 +1,9 @@
 # Description
 
-This repository is meant to serve as a general template for how to set up new repositories in the JogetOSS organization. 
+The Payment Processor Tool Plugin facilitates the integration of payment gateway, currently supports integration with Stripe and PayPal. It enables users to customize payment details and generate payment links. These payment links can be easily shared with customers via email or other configurable means, providing a convenient way for them to make payments.
+
+To setup and configure this plugin, please see the documentation at https://dev.joget.org/community/display/marketplace/Payment+Processor+Tool+Plugin
+
 
 # Getting Help
 

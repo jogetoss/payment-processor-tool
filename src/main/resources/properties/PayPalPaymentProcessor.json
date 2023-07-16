@@ -1,0 +1,80 @@
+[
+    {
+        "title": "Configure Paypal Payment Link Element",
+        "properties": [
+
+            {
+                "name": "environment",
+                "label": "Environment",
+                "type": "selectbox",
+                "options": [
+                    {
+                        "value": "",
+                        "label": ""
+                    },
+                    {
+                        "value": "SANDBOX",
+                        "label": "Sandbox"
+                    },
+                    {
+                        "value": "LIVE",
+                        "label": "Live"
+                    }
+                ]
+            },
+
+            {
+                "name": "clientId",
+                "label": "Client ID",
+                "type": "textfield",
+                "required": "True"
+            },
+            {
+                "name": "clientSecret",
+                "label": "Client Secret",
+                "type": "textfield",
+                "required": "True"
+            },
+            {
+                "name": "formDefId",
+                "label": "Form",
+                "type": "selectbox",
+                "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
+                "required": "True"
+            },
+            {
+                "name": "acknowledge",
+                "label": "Acknowledgement Link",
+                "type": "textfield",
+                "required": "True"
+            },
+            {
+                "name": "currency",
+                "label": "Currency",
+                "type": "textfield",
+                "required": "True"
+            },
+            {
+                "name": "amount",
+                "label": "Amount",
+                "type": "textfield",
+                "required": "True"
+            },
+            {
+                "name": "invoiceNo",
+                "label": "Invoice No",
+                "type": "textfield"
+            },
+            {
+                "name": "desciption",
+                "label": "Desciption",
+                "type": "textfield"
+            }
+        ]
+    }
+]
+
+
+
+
+
