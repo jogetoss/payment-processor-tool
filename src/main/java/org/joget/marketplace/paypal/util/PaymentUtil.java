@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -53,19 +51,20 @@ public class PaymentUtil {
         order.setIntent(INTENT);
         PurchaseUnit purchaseUnit = new PurchaseUnit();
         purchaseUnit.setReferenceId(id);
-        purchaseUnit.setInvoiceId(properties.getInvoiceNo());
-        purchaseUnit.setDescription(properties.getDesciption());
+        // purchaseUnit.setInvoiceId(properties.getInvoiceNo());
+        // purchaseUnit.setDescription(properties.getDesciption());
         Amount amount = new Amount();
         amount.setCurrencyCode(properties.getCurrency());
-        amount.setValue(properties.getAmount());
+        amount.setValue(properties.getTotalAmount());
         purchaseUnit.setAmount(amount);
 
         List<PurchaseUnit> purchaseUnits = new ArrayList<>();
         purchaseUnits.add(purchaseUnit);
         order.setPurchaseUnits(purchaseUnits);
 
-        String appId = properties.getAppId();
-        String appVersion = properties.getAppVersion();
+        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
+        String appId = appDef.getAppId();
+        String appVersion = appDef.getVersion().toString();
 
         String returnUrl = getServerUrl() + WorkflowUtil.getHttpServletRequest().getContextPath()
                 + "/web/json/app/" + appId + "/" + appVersion
@@ -127,7 +126,7 @@ public class PaymentUtil {
     public String generatePaymentLink(PluginProperties properties, String refId, String environment)  {
         String paymentLink = "";
         PaymentUtil util = new PaymentUtil();
-        String accessToken = util.generateAccessToken(properties.getClientId(), properties.getClientSecret(), "SANDBOX");
+        String accessToken = util.generateAccessToken(properties.getClientId(), properties.getClientSecret(), environment);
         if (accessToken != null && !accessToken.isEmpty()) {
 
             Order order = util.prepareOrder(refId, properties);
@@ -154,6 +153,9 @@ public class PaymentUtil {
                     String rel = jsonObject.getString("rel");
                     if (rel.equals("payer-action")) {
                         paymentLink = jsonObject.getString("href");
+                        break;
+                    } else if (rel.equals("information_link")) {
+                        LogUtil.info(this.getClass().getName(), "Unable to generate payment link.");
                         break;
                     }
                 }
@@ -210,26 +212,26 @@ public class PaymentUtil {
         FormRow row = new FormRow();
         row.setId(primaryKey);
         row.put("order_id", orderResponse.getOrderId());
-        row.put("status", orderResponse.getStatus());
+        row.put("payment_status", orderResponse.getStatus());
         row.put("update_time", "");
         row.put("payload", orderResponse.getPayload());
         rows.add(row);
         appService.storeFormData(formDefId, tableName, rows, primaryKey);
     }
 
-    public String stripeCreateProducts(String productName) throws StripeException {
+    public String stripeCreateProducts() throws StripeException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", productName);
+        params.put("name", "Joget Inc.");
 
         Product product = Product.create(params);
 
         return product.getId();
     }
 
-    public String stripeCreatePrices(String currency, Long unitAmount, String productId) throws StripeException {
+    public String stripeCreatePrices(String currency, Long totalAmount, String productId) throws StripeException {
         PriceCreateParams params = PriceCreateParams.builder()
                 .setCurrency(currency)
-                .setUnitAmount(unitAmount)
+                .setUnitAmount(totalAmount*100)
                 .setProduct(productId)
                 .build();
 
@@ -238,28 +240,27 @@ public class PaymentUtil {
         return price.getId();
     }
 
-    public String stripeCreatePaymentLinks(String priceId, Long quantity, String formDefId, String recordId, String appId, String appVersion) throws StripeException {
+    public String stripeCreatePaymentLinks(String priceId, String formDefId, String recordId, String appId, String appVersion) throws StripeException {
         AppDefinition appDef = AppUtil.getCurrentAppDefinition();
 
         PaymentLinkCreateParams params = PaymentLinkCreateParams.builder()
                 .addLineItem(
                         PaymentLinkCreateParams.LineItem.builder()
                                 .setPrice(priceId)
-                                .setQuantity(quantity)
-                                .build()
-                )
+                                .setQuantity(1L)
+                                .build())
                 .setAfterCompletion(
                         PaymentLinkCreateParams.AfterCompletion.builder()
                                 .setType(PaymentLinkCreateParams.AfterCompletion.Type.REDIRECT)
                                 .setRedirect(
                                         PaymentLinkCreateParams.AfterCompletion.Redirect.builder()
                                                 .setUrl(getServerUrl()
-                                                        + "/jw/web/json/app/" + appDef.getAppId() + "/" + appDef.getVersion() + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=success&session_id={CHECKOUT_SESSION_ID}&formDefId="
+                                                        + "/jw/web/json/app/" + appDef.getAppId() + "/"
+                                                        + appDef.getVersion().toString()
+                                                        + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=success&session_id={CHECKOUT_SESSION_ID}&formDefId="
                                                         + formDefId + "&id=" + recordId + "&provider=stripe")
-                                                .build()
-                                )
-                                .build()
-                )
+                                                .build())
+                                .build())
                 .build();
 
         PaymentLink paymentLink = PaymentLink.create(params);

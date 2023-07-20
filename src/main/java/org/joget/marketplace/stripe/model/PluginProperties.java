@@ -3,10 +3,8 @@ package org.joget.marketplace.stripe.model;
 public class PluginProperties {
 
     private String apiKey;
-    private String productName;
     private String currency;
-    private String unitAmount;
-    private String quantity;
+    private String totalAmount;
     private String redirectUserviewMenu;
     private String redirectUserviewMenuFormID;
 
@@ -18,14 +16,6 @@ public class PluginProperties {
         this.apiKey = apiKey;
     }
 
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
     public String getCurrency() {
         return currency;
     }
@@ -34,20 +24,12 @@ public class PluginProperties {
         this.currency = currency;
     }
 
-    public String getUnitAmount() {
-        return unitAmount;
+    public String getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setUnitAmount(String unitAmount) {
-        this.unitAmount = unitAmount;
-    }
-
-    public String getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(String quantity) {
-        this.quantity = quantity;
+    public void setTotalAmount(String totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public String getRedirectUserviewMenu() {

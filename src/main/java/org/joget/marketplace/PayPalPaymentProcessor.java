@@ -26,13 +26,11 @@ public class PayPalPaymentProcessor {
         String environment = (String) properties.get("environment");
         String clientId = (String) properties.get("clientId");
         String clientSecret = (String) properties.get("clientSecret");
-        String formDefId = (String) properties.get("pmtFormDefId");
-        //String saveFormDefId = (String) properties.get("saveFormDefId");
-        String acknowledge = (String) properties.get("pmtAcknowledge");
-        String currency = (String) properties.get("pmtCurrency");
-        String amount = (String) properties.get("pmtAmount");
-        String invoiceNo = (String) properties.get("pmtInvoiceNo");
-        String desciption = (String) properties.get("pmtDesciption");
+        String formDefId = (String) properties.get("formDefId");
+        String currency = (String) properties.get("currency");
+        String totalAmount = (String) properties.get("totalAmount");
+        String redirectUserviewMenu = (String) properties.get("redirectUserviewMenu");
+        String redirectUserviewMenuFormID = (String) properties.get("redirectUserviewMenuFormID");
         String serverUrl = PaymentUtil.getServerUrl();
 
         String paymentLink = serverUrl + WorkflowUtil.getHttpServletRequest().getContextPath()
@@ -45,22 +43,19 @@ public class PayPalPaymentProcessor {
         pluginProperties.setClientId(clientId);
         pluginProperties.setClientSecret(clientSecret);
         pluginProperties.setFormDefId(formDefId);
-        pluginProperties.setAcknowledge(acknowledge);
         pluginProperties.setCurrency(currency);
-        pluginProperties.setAmount(amount);
-        pluginProperties.setInvoiceNo(invoiceNo);
-        pluginProperties.setDesciption(desciption);
-        pluginProperties.setAppId(appDef.getAppId());
-        pluginProperties.setAppVersion(String.valueOf(appDef.getVersion()));
+        pluginProperties.setTotalAmount(totalAmount);
+        pluginProperties.setRedirectUserviewMenu(redirectUserviewMenu);
+        pluginProperties.setRedirectUserviewMenuFormID(redirectUserviewMenuFormID);
 
         String pp = generatePluginProperties(pluginProperties);
 
         FormRowSet rows = new FormRowSet();
         FormRow row = new FormRow();
         row.setId(recordId);
-        row.put("payment_link", paymentLink);
-        row.put("plugin_properties", pp);
-        row.put("status", "PAYER_ACTION_REQUIRED");
+        row.put("paypal_payment_link", paymentLink);
+        row.put("paypal_plugin_properties", pp);
+        row.put("payment_status", "PAYER_ACTION_REQUIRED");
         rows.add(row);
 
         String tableName = appService.getFormTableName(appDef, formDefId);
@@ -77,17 +72,18 @@ public class PayPalPaymentProcessor {
 
         FormRowSet frs = appService.loadFormData(appId, appVersion, formDefId, id);
         FormRow formRow = frs.get(0);
-        String pp = (String) formRow.get("plugin_properties");
+        String pp = (String) formRow.get("paypal_plugin_properties");
         Gson gson = new Gson();
         PluginProperties props = gson.fromJson(pp, PluginProperties.class);
+        String redirectUserviewMenu = props.getRedirectUserviewMenu();
+        String redirectUserviewMenuFormID = props.getRedirectUserviewMenuFormID();
+        String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
 
         if (id != null && !id.isEmpty()) {
-            String status = (String) formRow.get("status");
-            if (status != null && !status.isEmpty() && "COMPLETED".equalsIgnoreCase(status)) {
-                response.sendRedirect(props.getAcknowledge() + "?id=" + id + "&src=stored");
+            String paymentStatus = (String) formRow.get("payment_status");
+            if (paymentStatus != null && !paymentStatus.isEmpty() && "COMPLETED".equalsIgnoreCase(paymentStatus) || "succeeded".equalsIgnoreCase(paymentStatus)) {
+                response.sendRedirect(redirectURL + "&src=stored");
             } else {
-                props.setAppId(appId);
-                props.setAppVersion(appVersion);
                 String paymentLink = util.generatePaymentLink(props, id, props.getEnvironment());
                 response.sendRedirect(paymentLink);
             }
@@ -102,13 +98,15 @@ public class PayPalPaymentProcessor {
         String appId = appDef.getAppId();
         FormRowSet frs = appService.loadFormData(appId, appVersion, formDefId, id);
         FormRow formRow = frs.get(0);
-        String pp = (String) formRow.get("plugin_properties");
+        String pp = (String) formRow.get("paypal_plugin_properties");
         Gson gson = new Gson();
         PluginProperties props = gson.fromJson(pp, PluginProperties.class);
         String clientId = props.getClientId();
         String clientSecret = props.getClientSecret();
         String environment = props.getEnvironment();
-        String acknowledgeUrl = props.getAcknowledge();
+        String redirectUserviewMenu = props.getRedirectUserviewMenu();
+        String redirectUserviewMenuFormID = props.getRedirectUserviewMenuFormID();
+        String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
 
         String bearerToken = util.generateAccessToken(clientId, clientSecret, environment);
         String responseString = util.captureOrder(token, id, bearerToken, environment);
@@ -122,7 +120,7 @@ public class PayPalPaymentProcessor {
             orderResponse.setPayload(responseString);
             orderResponse.setToken(order.getString("id"));
             util.saveToForm(id, formDefId, orderResponse);
-            response.sendRedirect(acknowledgeUrl + "?id=" + id + "&src=gateway");
+            response.sendRedirect(redirectURL + "&src=gateway");
         }
     }
 
@@ -137,7 +135,11 @@ public class PayPalPaymentProcessor {
         String pp = (String) formRow.get("plugin_properties");
         Gson gson = new Gson();
         PluginProperties props = gson.fromJson(pp, PluginProperties.class);
-        response.sendRedirect(props.getAcknowledge() + "?id=" + id + "&src=cancelled");
+
+        String redirectUserviewMenu = props.getRedirectUserviewMenu();
+        String redirectUserviewMenuFormID = props.getRedirectUserviewMenuFormID();
+        String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
+        response.sendRedirect(redirectURL + "&src=cancelled");
     }
 
     private String generatePluginProperties(PluginProperties pluginProperties) {

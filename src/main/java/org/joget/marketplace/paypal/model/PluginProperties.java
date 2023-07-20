@@ -7,15 +7,16 @@ public class PluginProperties {
     private String clientSecret;
     private String formDefId;
     private String saveFormDefId;
-    private String acknowledge;
     private String currency;
-    private String amount;
+    private String totalAmount;
     private String invoiceNo;
-    private String desciption;
-    private String nonce;
+    private String description;
     
     private String appId;
     private String appVersion;
+
+    private String redirectUserviewMenu;
+    private String redirectUserviewMenuFormID;
 
     public String getEnvironment() {
         return environment;
@@ -57,14 +58,6 @@ public class PluginProperties {
         this.saveFormDefId = saveFormDefId;
     }
 
-    public String getAcknowledge() {
-        return acknowledge;
-    }
-
-    public void setAcknowledge(String acknowledge) {
-        this.acknowledge = acknowledge;
-    }
-
     public String getCurrency() {
         return currency;
     }
@@ -73,12 +66,12 @@ public class PluginProperties {
         this.currency = currency;
     }
 
-    public String getAmount() {
-        return amount;
+    public String getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setAmount(String amount) {
-        this.amount = amount;
+    public void setTotalAmount(String totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public String getInvoiceNo() {
@@ -89,36 +82,28 @@ public class PluginProperties {
         this.invoiceNo = invoiceNo;
     }
 
-    public String getDesciption() {
-        return desciption;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDesciption(String desciption) {
-        this.desciption = desciption;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public String getAppId() {
-        return appId;
+    public String getRedirectUserviewMenu() {
+        return redirectUserviewMenu;
     }
 
-    public void setAppId(String appId) {
-        this.appId = appId;
+    public void setRedirectUserviewMenu(String redirectUserviewMenu) {
+        this.redirectUserviewMenu = redirectUserviewMenu;
     }
 
-    public String getAppVersion() {
-        return appVersion;
+    public String getRedirectUserviewMenuFormID() {
+        return redirectUserviewMenuFormID;
     }
 
-    public void setAppVersion(String appVersion) {
-        this.appVersion = appVersion;
-    }
-
-    public String getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
+    public void setRedirectUserviewMenuFormID(String redirectUserviewMenuFormID) {
+        this.redirectUserviewMenuFormID = redirectUserviewMenuFormID;
     }
 
 }
