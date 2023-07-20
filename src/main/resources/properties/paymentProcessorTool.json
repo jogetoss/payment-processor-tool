@@ -24,12 +24,12 @@
                     "label":"All"
                   },
                   {
-                     "value":"STRIPE",
-                     "label":"Stripe"
+                    "value":"PAYPAL",
+                    "label":"Paypal"
                   },
                   {
-                     "value":"PAYPAL",
-                     "label":"Paypal"
+                     "value":"STRIPE",
+                     "label":"Stripe"
                   }
                ]
             }, 
