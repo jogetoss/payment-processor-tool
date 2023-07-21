@@ -84,22 +84,28 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
 
     @Override
     public String getName() {
-        return "Payment Processor Tool";
+        return AppPluginUtil.getMessage("processtool.paymentprocessortool.name", getClassName(), MESSAGE_PATH);
     }
 
     @Override
     public String getVersion() {
-      return "8.0.1";
+        final Properties projectProp = new Properties();
+        try {
+            projectProp.load(this.getClass().getClassLoader().getResourceAsStream("project.properties"));
+        } catch (IOException ex) {
+            LogUtil.error(getClass().getName(), ex, "Unable to get project version from project properties...");
+        }
+        return projectProp.getProperty("version");
     }
 
     @Override
     public String getDescription() {
-        return "Payment Processor Tool";    
+        return AppPluginUtil.getMessage("processtool.paymentprocessortool.desc", getClassName(), MESSAGE_PATH);
     }
 
     @Override
     public String getLabel() {
-        return "Payment Processor Tool";    
+        return AppPluginUtil.getMessage("processtool.paymentprocessortool.name", getClassName(), MESSAGE_PATH);
     }
 
     @Override
