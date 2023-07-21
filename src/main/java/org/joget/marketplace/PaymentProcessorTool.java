@@ -89,7 +89,7 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
 
     @Override
     public String getVersion() {
-      return "8.0.0";
+      return "8.0.1";
     }
 
     @Override
