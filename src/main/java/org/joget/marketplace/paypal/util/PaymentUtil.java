@@ -231,7 +231,7 @@ public class PaymentUtil {
     public String stripeCreatePrices(String currency, Long totalAmount, String productId) throws StripeException {
         PriceCreateParams params = PriceCreateParams.builder()
                 .setCurrency(currency)
-                .setUnitAmount(totalAmount*100)
+                .setUnitAmount(totalAmount)
                 .setProduct(productId)
                 .build();
 

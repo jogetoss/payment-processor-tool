@@ -85,7 +85,8 @@ public class StripePaymentProcessor {
 
                 try {
                     String productId = util.stripeCreateProducts();
-                    String priceId = util.stripeCreatePrices(currency, Long.valueOf(totalAmount), productId);
+                    Long totalAmountLong = (long) (Double.parseDouble(totalAmount) * 100);
+                    String priceId = util.stripeCreatePrices(currency, totalAmountLong, productId);
                     String paymentUrl = util.stripeCreatePaymentLinks(priceId, formDefId, id, appId, appVersion);
                     response.sendRedirect(paymentUrl);
 
