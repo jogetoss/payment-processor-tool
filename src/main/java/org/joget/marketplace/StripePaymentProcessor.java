@@ -27,7 +27,7 @@ public class StripePaymentProcessor {
 
         String formDefId = (String) properties.get("formDefId");
         String apiKey = (String) properties.get("apiKey");
-        String invoiceNo = (String) properties.get("invoiceNo");
+        String productName = (String) properties.get("productName");
         String currency = (String) properties.get("currency");
         String totalAmount = (String) properties.get("totalAmount");
         String redirectUserviewMenu = (String) properties.get("redirectUserviewMenu");
@@ -40,7 +40,7 @@ public class StripePaymentProcessor {
 
         org.joget.marketplace.stripe.model.PluginProperties pp = new org.joget.marketplace.stripe.model.PluginProperties();
         pp.setApiKey(apiKey);
-        pp.setInvoiceNo(invoiceNo);
+        pp.setProductName(productName);
         pp.setCurrency(currency);
         pp.setTotalAmount(totalAmount);
         pp.setRedirectUserviewMenu(redirectUserviewMenu);
@@ -82,12 +82,12 @@ public class StripePaymentProcessor {
             if (paymentStatus != null && !paymentStatus.isEmpty() && "COMPLETED".equalsIgnoreCase(paymentStatus) || "succeeded".equalsIgnoreCase(paymentStatus)) {
                 response.sendRedirect(redirectURL + "&src=stored");
             } else {
-                String invoiceNo = pp.getInvoiceNo();
+                String productName = pp.getProductName();
                 String currency = pp.getCurrency();
                 String totalAmount = pp.getTotalAmount();
 
                 try {
-                    String productId = util.stripeCreateProducts(invoiceNo);
+                    String productId = util.stripeCreateProducts(productName);
                     Long totalAmountLong = (long) (Double.parseDouble(totalAmount) * 100);
                     String priceId = util.stripeCreatePrices(currency, totalAmountLong, productId);
                     String paymentUrl = util.stripeCreatePaymentLinks(priceId, formDefId, id, appId, appVersion);

@@ -7,9 +7,9 @@ public class PluginProperties {
     private String clientSecret;
     private String formDefId;
     private String saveFormDefId;
+    private String productName;
     private String currency;
     private String totalAmount;
-    private String invoiceNo;
     private String description;
     
     private String appId;
@@ -58,6 +58,14 @@ public class PluginProperties {
         this.saveFormDefId = saveFormDefId;
     }
 
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     public String getCurrency() {
         return currency;
     }
@@ -72,14 +80,6 @@ public class PluginProperties {
 
     public void setTotalAmount(String totalAmount) {
         this.totalAmount = totalAmount;
-    }
-
-    public String getInvoiceNo() {
-        return invoiceNo;
-    }
-
-    public void setInvoiceNo(String invoiceNo) {
-        this.invoiceNo = invoiceNo;
     }
 
     public String getDescription() {

@@ -27,7 +27,7 @@ public class PayPalPaymentProcessor {
         String clientId = (String) properties.get("clientId");
         String clientSecret = (String) properties.get("clientSecret");
         String formDefId = (String) properties.get("formDefId");
-        String invoiceNo = (String) properties.get("invoiceNo");
+        String productName = (String) properties.get("productName");
         String currency = (String) properties.get("currency");
         String totalAmount = (String) properties.get("totalAmount");
         String redirectUserviewMenu = (String) properties.get("redirectUserviewMenu");
@@ -44,7 +44,7 @@ public class PayPalPaymentProcessor {
         pluginProperties.setClientId(clientId);
         pluginProperties.setClientSecret(clientSecret);
         pluginProperties.setFormDefId(formDefId);
-        pluginProperties.setInvoiceNo(invoiceNo);
+        pluginProperties.setProductName(productName);
         pluginProperties.setCurrency(currency);
         pluginProperties.setTotalAmount(totalAmount);
         pluginProperties.setRedirectUserviewMenu(redirectUserviewMenu);

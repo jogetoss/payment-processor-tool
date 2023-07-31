@@ -104,8 +104,8 @@
                "type":"Header"
             },
             {
-                "name":"invoiceNo",
-                "label":"@@org.joget.marketplace.paymentprocessortool.invoiceNo@@",
+                "name":"productName",
+                "label":"@@org.joget.marketplace.paymentprocessortool.productName@@",
                 "type":"textfield",
                 "required":"True"
             },
