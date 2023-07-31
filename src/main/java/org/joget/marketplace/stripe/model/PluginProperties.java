@@ -3,6 +3,7 @@ package org.joget.marketplace.stripe.model;
 public class PluginProperties {
 
     private String apiKey;
+    private String invoiceNo;
     private String currency;
     private String totalAmount;
     private String redirectUserviewMenu;
@@ -14,6 +15,14 @@ public class PluginProperties {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getInvoiceNo() {
+        return invoiceNo;
+    }
+
+    public void setInvoiceNo(String invoiceNo) {
+        this.invoiceNo = invoiceNo;
     }
 
     public String getCurrency() {

@@ -219,9 +219,9 @@ public class PaymentUtil {
         appService.storeFormData(formDefId, tableName, rows, primaryKey);
     }
 
-    public String stripeCreateProducts() throws StripeException {
+    public String stripeCreateProducts(String invoiceNo) throws StripeException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", "Joget Inc.");
+        params.put("name", invoiceNo);
 
         Product product = Product.create(params);
 

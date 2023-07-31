@@ -104,14 +104,22 @@
                "type":"Header"
             },
             {
+                "name":"invoiceNo",
+                "label":"@@org.joget.marketplace.paymentprocessortool.invoiceNo@@",
+                "type":"textfield",
+                "required":"True"
+            },
+            {
                "name":"currency",
                "label":"@@org.joget.marketplace.paymentprocessortool.currency@@",
-               "type":"textfield"
+               "type":"textfield",
+               "required":"True"
             },
             {
                "name":"totalAmount",
                "label":"@@org.joget.marketplace.paymentprocessortool.totalAmount@@",
-               "type":"textfield"
+               "type":"textfield",
+               "required":"True"
             },
             {
                "name":"redirectDetails",
