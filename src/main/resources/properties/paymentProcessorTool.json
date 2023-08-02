@@ -1,6 +1,6 @@
 [
     {
-        "title": "Configure Paypal Payment Link Element",
+        "title": "@@org.joget.marketplace.paymentprocessortool.config@@",
         "properties": [
             {
                 "name": "formDefId",
