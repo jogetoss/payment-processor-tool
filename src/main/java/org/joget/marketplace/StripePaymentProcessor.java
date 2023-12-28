@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.model.Form;
+import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
@@ -35,7 +37,7 @@ public class StripePaymentProcessor {
         String serverUrl = PaymentUtil.getServerUrl();
         String stripePaymentLink = serverUrl + WorkflowUtil.getHttpServletRequest().getContextPath()
                 + "/web/json/app/" + appDef.getAppId() + "/" + appDef.getVersion()
-                + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=generateLink&provider=stripe" 
+                + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=generateLink&provider=stripe"
                 + "&id=" + recordId + "&formDefId=" + formDefId;
 
         org.joget.marketplace.stripe.model.PluginProperties pp = new org.joget.marketplace.stripe.model.PluginProperties();
@@ -54,6 +56,7 @@ public class StripePaymentProcessor {
         formRow.put("stripe_payment_link", stripePaymentLink);
         formRow.put("stripe_plugin_properties", jsonPp);
         formRow.put("payment_status", "PAYER_ACTION_REQUIRED");
+        formRow.put("id", recordId);
         set.add(formRow);
         set.add(0, formRow);
         appService.storeFormData(appDef.getId(), appDef.getVersion().toString(), formDefId, set, recordId);
@@ -117,9 +120,9 @@ public class StripePaymentProcessor {
             row = rowSet.get(0);
             Gson gson = new Gson();
             PluginProperties pp = gson.fromJson(row.getProperty("stripe_plugin_properties"), PluginProperties.class);
-            
+
             Stripe.apiKey = pp.getApiKey();
-            
+
             String redirectUserviewMenu = pp.getRedirectUserviewMenu();
             String redirectUserviewMenuFormID = pp.getRedirectUserviewMenuFormID();
             String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
@@ -131,7 +134,7 @@ public class StripePaymentProcessor {
                 String paymentStatus = paymentIntent.getStatus();
 
                 String payload = gson.toJson(paymentIntent);
-                
+
                 // save to db
                 FormRowSet set = new FormRowSet();
                 FormRow r1 = new FormRow();
@@ -142,6 +145,20 @@ public class StripePaymentProcessor {
                 set.add(0, r1);
                 appService.storeFormData(appId, appVersion, formDefId, set, id);
 
+                // process the post form 
+                FormData formData = new FormData();
+                String primaryKey = appService.getOriginProcessId(id);
+                formData.setPrimaryKeyValue(primaryKey);
+                Form loadForm = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), formDefId, null, null, null, formData, null, null);
+                formData.addRequestParameterValues(FormUtil.FORM_META_ORIGINAL_ID, new String[]{id});
+                if (loadForm != null) {
+                    Map<String, Object> propertiesMap = loadForm.getProperties();
+                    String postProcessorRunOn = (String) propertiesMap.get("postProcessorRunOn");
+                    if ("update".equalsIgnoreCase(postProcessorRunOn)) {
+                        appService.submitForm(loadForm, formData, true);
+                    }
+                }
+                
                 response.sendRedirect(redirectURL + "&src=gateway");
             } catch (StripeException ex) {
                 LogUtil.error(getClassName(), ex, ex.getMessage());

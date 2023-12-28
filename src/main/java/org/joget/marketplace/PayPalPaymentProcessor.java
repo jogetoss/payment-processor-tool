@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.model.Form;
+import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
@@ -58,6 +60,7 @@ public class PayPalPaymentProcessor {
         row.put("paypal_payment_link", paymentLink);
         row.put("paypal_plugin_properties", pp);
         row.put("payment_status", "PAYER_ACTION_REQUIRED");
+        row.put("id", recordId);
         rows.add(row);
 
         String tableName = appService.getFormTableName(appDef, formDefId);
@@ -122,6 +125,21 @@ public class PayPalPaymentProcessor {
             orderResponse.setPayload(responseString);
             orderResponse.setToken(order.getString("id"));
             util.saveToForm(id, formDefId, orderResponse);
+
+            // process the post form 
+            FormData formData = new FormData();
+            String primaryKey = appService.getOriginProcessId(id);
+            formData.setPrimaryKeyValue(primaryKey);
+            Form loadForm = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), formDefId, null, null, null, formData, null, null);
+            formData.addRequestParameterValues(FormUtil.FORM_META_ORIGINAL_ID, new String[]{id});
+            if (loadForm != null) {
+                Map<String, Object> propertiesMap = loadForm.getProperties();
+                String postProcessorRunOn = (String) propertiesMap.get("postProcessorRunOn");
+                if ("update".equalsIgnoreCase(postProcessorRunOn)) {
+                    appService.submitForm(loadForm, formData, true);
+                }
+            }
+
             response.sendRedirect(redirectURL + "&src=gateway");
         }
     }
@@ -149,5 +167,5 @@ public class PayPalPaymentProcessor {
         String jsonString = gson.toJson(pluginProperties);
         return jsonString;
     }
-    
+
 }

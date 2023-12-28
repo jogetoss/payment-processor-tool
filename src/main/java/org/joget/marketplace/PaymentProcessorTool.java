@@ -46,7 +46,6 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
             } else if (METHOD_ALL.equalsIgnoreCase(paymentMethod)) {
                 PayPalPaymentProcessor payPalPaymentProcessor = new PayPalPaymentProcessor();
                 payPalPaymentProcessor.generatePaymentLink(properties, appDef, recordId);
-
                 StripePaymentProcessor stripePaymentProcessor = new StripePaymentProcessor();
                 stripePaymentProcessor.generatePaymentLink(properties, appDef, recordId);
             }
