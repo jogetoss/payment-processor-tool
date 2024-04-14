@@ -4,7 +4,7 @@
     <groupId>org.joget.marketplace</groupId>
     <artifactId>payment-processor-tool</artifactId>
     <packaging>bundle</packaging>
-    <version>8.0.5</version>
+    <version>8.0.6</version>
     <name>payment-processor-tool</name>
     <url>http://www.joget.org</url>
     <build>
@@ -123,6 +123,12 @@
         </dependency>
         
         <!-- End change plugin specific dependencies here -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.3.1</version> 
+        </dependency>
+ 
     </dependencies>
     <distributionManagement>
         <repository>

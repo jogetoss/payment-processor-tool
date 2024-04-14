@@ -22,6 +22,7 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
     private static final String METHOD_PAYPAL = "PAYPAL";
     private static final String METHOD_STRIPE = "STRIPE";
     private static final String METHOD_ALL = "ALL";
+    private static final String METHOD_RAZORPAY = "RAZORPAY";
 
     @Override
     public Object execute(Map properties) {
@@ -48,6 +49,11 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
                 payPalPaymentProcessor.generatePaymentLink(properties, appDef, recordId);
                 StripePaymentProcessor stripePaymentProcessor = new StripePaymentProcessor();
                 stripePaymentProcessor.generatePaymentLink(properties, appDef, recordId);
+                RazorpayPaymentProcessor razorpayPaymentProcessor = new RazorpayPaymentProcessor();
+                razorpayPaymentProcessor.generatePaymentLink(properties, appDef, recordId);
+            } else if (METHOD_RAZORPAY.equalsIgnoreCase(paymentMethod)) {
+                RazorpayPaymentProcessor razorpayPaymentProcessor = new RazorpayPaymentProcessor();
+                razorpayPaymentProcessor.generatePaymentLink(properties, appDef, recordId);
             }
         }
 
@@ -61,7 +67,7 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
         String id = request.getParameter("id");
         String formDefId = request.getParameter("formDefId");
         String token = request.getParameter("token");
-
+        String recordId = id;
         if (provider != null && !provider.isEmpty() && "paypal".equalsIgnoreCase(provider)) {
             PayPalPaymentProcessor payPalPaymentProcessor = new PayPalPaymentProcessor();
             if (action != null && !action.isEmpty() && "generateLink".equalsIgnoreCase(action)) {
@@ -78,7 +84,16 @@ public class PaymentProcessorTool extends DefaultApplicationPlugin implements Pl
             } else if (action != null && !action.isEmpty() && "success".equalsIgnoreCase(action)) {
                 stripePaymentProcessor.processPayment(request, response, id, formDefId);
             }
+        } else if (provider != null && !provider.isEmpty() && "razorpay".equalsIgnoreCase(provider)) {
+            RazorpayPaymentProcessor razorpayPaymentProcessor = new RazorpayPaymentProcessor();
+            if (action != null && !action.isEmpty() && "generateLink".equalsIgnoreCase(action)) {
+                razorpayPaymentProcessor.createRazorpayLink(request, response, id, formDefId, recordId);
+            } else if (action != null && !action.isEmpty() && "success".equalsIgnoreCase(action)) {
+                razorpayPaymentProcessor.processRazorpayPayment(request, response, id, formDefId);
+            }
+
         }
+
     }
 
     @Override

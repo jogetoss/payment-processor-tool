@@ -30,6 +30,10 @@
                   {
                      "value":"STRIPE",
                      "label":"Stripe"
+                  },
+                  {
+                     "value":"RAZORPAY",
+                     "label":"Razorpay"
                   }
                ]
             }, 
@@ -96,6 +100,32 @@
                 "required":"True",
                 "control_field": "paymentMethod",
                 "control_value": "STRIPE|ALL",
+                "control_use_regex":"true"
+            },
+            {  
+                "name":"razorHeader",
+                "label": "@@org.joget.marketplace.paymentprocessortool.razor.header@@",
+                "type":"Header",
+                "control_field":"paymentMethod",
+                "control_value":"RAZORPAY|ALL",
+                "control_use_regex":"true"
+            }, 
+            {
+                "name":"apiSecret",
+                "label":"@@org.joget.marketplace.paymentprocessortool.razor.apiSecret@@",
+                "type":"textfield",
+                "required":"True",
+                "control_field": "paymentMethod",
+                "control_value": "RAZORPAY|ALL",
+                "control_use_regex":"true"
+            },
+            {
+                "name":"razorApiKey",
+                "label":"@@org.joget.marketplace.paymentprocessortool.razor.apiKey@@",
+                "type":"textfield",
+                "required":"True",
+                "control_field": "paymentMethod",
+                "control_value": "RAZORPAY|ALL",
                 "control_use_regex":"true"
             },
             {
