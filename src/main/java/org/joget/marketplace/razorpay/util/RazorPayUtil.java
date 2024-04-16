@@ -31,19 +31,15 @@ public class RazorPayUtil {
         try {
             RazorpayClient client = new RazorpayClient(apiKey, apiSecret);
             JSONObject orderRequest = new JSONObject(orderDetails);
-            // Before creating the order, ensure the receipt value does not exceed 40 characters
-            // Log the request details
-            LogUtil.info(getClass().getName(), "Creating Razorpay Order. Request: " + orderRequest.toString());
+           
             String receipt = orderRequest.optString("receipt");
             if (receipt.length() > 40) {
-                // Trim or modify the receipt to meet the requirement
-                // Example: trim the string to 40 characters
+                
                 receipt = receipt.substring(0, 40);
                 orderRequest.put("receipt", receipt);
             }
             order = client.Orders.create(orderRequest);
-            // Log the response details
-            LogUtil.info(getClass().getName(), "Razorpay Order Created. Response: " + order.toString());
+           
         } catch (RazorpayException e) {
             LogUtil.error(getClass().getName(), e, "Failed to create Razorpay client or order: " + e.getMessage());
             throw e;
@@ -76,17 +72,13 @@ public class RazorPayUtil {
                 .POST(HttpRequest.BodyPublishers.ofString(new JSONObject(linkDetails).toString()))
                 .build();
 
-        // Log the request details
-        LogUtil.info(getClass().getName(), "Creating Razorpay Payment Link. Request Details: " + new JSONObject(linkDetails).toString());
+        
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        // Log the response details
-        LogUtil.info(getClass().getName(), "Razorpay Payment Link Created. Response: " + response.body());
+       
         JSONObject jsonResponse = new JSONObject(response.body());
         String shortUrl = jsonResponse.optString("short_url");
-        LogUtil.info(getClass().getName(), "Razorpay short URL: " + shortUrl);
 
-        // Print the short URL to the console
-        System.out.println("Razorpay short URL: " + shortUrl);
+      
         return shortUrl;
     }
 

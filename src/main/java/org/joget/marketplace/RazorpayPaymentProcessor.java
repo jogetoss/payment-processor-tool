@@ -80,7 +80,6 @@ public class RazorpayPaymentProcessor {
             Gson gson = new Gson();
             // Logging the JSON string to be deserialized
             String razorPluginPropertiesJson = row.getProperty("razorpay_plugin_properties");
-            LogUtil.info(getClass().getName(), "Razor plugin properties JSON: " + razorPluginPropertiesJson);
             PluginProperties pp = gson.fromJson(row.getProperty("razorpay_plugin_properties"), PluginProperties.class);
             // Logging to check if pp is null after deserialization
             if (pp == null) {
@@ -115,8 +114,7 @@ public class RazorpayPaymentProcessor {
                     linkDetails.put("currency", pp.getCurrency());
                     linkDetails.put("description", "Payment for " + pp.getProductName());
                     String paymentLink = razorPayUtil.createRazorpayPaymentLink(linkDetails, orderId, formDefId, recordId);
-                    // Log the payment link
-                    LogUtil.info(getClass().getName(), "Razorpay Payment Link: " + paymentLink);
+                    
                     // Redirect user to the payment link
                     response.sendRedirect(paymentLink);
                 } catch (RazorpayException e) {
@@ -133,14 +131,12 @@ public class RazorpayPaymentProcessor {
     }
 
     public void processRazorpayPayment(HttpServletRequest request, HttpServletResponse response, String id, String formDefId) throws IOException {
-        // Log entry into the method
-        LogUtil.info(getClass().getName(), "Starting processRazorpayPayment for recordId: " + id);
+        
         // Log the full request URL
         String fullRequestUrl = request.getRequestURL().toString();
         if (request.getQueryString() != null) {
             fullRequestUrl += "?" + request.getQueryString();
         }
-        LogUtil.info(getClass().getName(), "Full Request URL: " + fullRequestUrl);
         AppService appService = (AppService) FormUtil.getApplicationContext().getBean("appService");
 
         String paymentId = request.getParameter("razorpay_payment_id");
@@ -149,11 +145,7 @@ public class RazorpayPaymentProcessor {
         String paymentLinkRefId = request.getParameter("razorpay_payment_link_reference_id");
         String paymentLinkStatus = request.getParameter("razorpay_payment_link_status");
 
-        LogUtil.info(getClass().getName(), "Received paymentId: " + paymentId);
-        LogUtil.info(getClass().getName(), "Received signature: " + signature);
-        LogUtil.info(getClass().getName(), "Received paymentLinkId: " + paymentLinkId);
-        LogUtil.info(getClass().getName(), "Received paymentLinkRefId: " + paymentLinkRefId);
-        LogUtil.info(getClass().getName(), "Received paymentLinkStatus: " + paymentLinkStatus);
+        
 
         AppDefinition appDef = AppUtil.getCurrentAppDefinition();
         String appVersion = String.valueOf(appDef.getVersion());
@@ -164,13 +156,11 @@ public class RazorpayPaymentProcessor {
         if (rowSet != null && !rowSet.isEmpty()) {
             FormRow row = rowSet.get(0);
             Gson gson = new Gson();
-            LogUtil.info(getClass().getName(), "Retrieved form data: " + gson.toJson(row));
             PluginProperties pp = gson.fromJson(row.getProperty("razorpay_plugin_properties"), PluginProperties.class);
 
             String redirectUserviewMenu = pp.getRedirectUserviewMenu();
             String redirectUserviewMenuFormID = pp.getRedirectUserviewMenuFormID();
             String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
-            LogUtil.info(getClass().getName(), "Redirect URL: " + redirectURL);
 
             if (verifyRazorpaySignature(paymentLinkId, paymentLinkRefId, paymentLinkStatus, paymentId, signature, pp.apiSecret)) {
                 // Save Razorpay payment information to the database
@@ -216,18 +206,13 @@ public class RazorpayPaymentProcessor {
         try {
             String payload = paymentLinkId + "|" + paymentLinkRefId + "|" + paymentLinkStatus + "|" + paymentId;
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-            // Logging the payload used for generating the hash.
-            LogUtil.info(getClass().getName(), "Payload for signature verification: " + payload);
+           
             SecretKeySpec secret_key = new SecretKeySpec(apiSecret.getBytes(), "HmacSHA256");
             sha256_HMAC.init(secret_key);
 
             String hash = Hex.encodeHexString(sha256_HMAC.doFinal(payload.getBytes()));
-            // Logging the generated hash.
-            LogUtil.info(getClass().getName(), "Generated hash: " + hash);
-
-            // Logging the result of the signature verification.
+           
             boolean isSignatureValid = hash.equals(signature);
-            LogUtil.info(getClass().getName(), "Signature verification result: " + isSignatureValid);
 
             return isSignatureValid;
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
