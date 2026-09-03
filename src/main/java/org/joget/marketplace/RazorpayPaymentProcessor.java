@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -45,14 +46,14 @@ public class RazorpayPaymentProcessor {
                 + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=generateLink&provider=razorpay"
                 + "&id=" + recordId + "&formDefId=" + formDefId;
 
-        org.joget.marketplace.razorpay.model.PluginProperties pp = new org.joget.marketplace.razorpay.model.PluginProperties();
-        pp.setApiKey(apiKey);
-        pp.setApiSecret(apiSecret); // This line is added to set the API secret
-        pp.setProductName(productName);
-        pp.setCurrency(currency);
-        pp.setTotalAmount(totalAmount);
-        pp.setRedirectUserviewMenu(redirectUserviewMenu);
-        pp.setRedirectUserviewMenuFormID(redirectUserviewMenuFormID);
+        Map<String, Object> pp = new LinkedHashMap<>();
+        pp.put("apiKey", apiKey);
+        pp.put("apiSecret", apiSecret);
+        pp.put("productName", productName);
+        pp.put("currency", currency);
+        pp.put("totalAmount", totalAmount);
+        pp.put("redirectUserviewMenu", redirectUserviewMenu);
+        pp.put("redirectUserviewMenuFormID", redirectUserviewMenuFormID);
 
         Gson gson = new Gson();
         String jsonPp = gson.toJson(pp);
@@ -80,7 +81,7 @@ public class RazorpayPaymentProcessor {
             Gson gson = new Gson();
             // Logging the JSON string to be deserialized
             String razorPluginPropertiesJson = row.getProperty("razorpay_plugin_properties");
-            PluginProperties pp = gson.fromJson(row.getProperty("razorpay_plugin_properties"), PluginProperties.class);
+            PluginProperties pp = toPluginProperties(gson.fromJson(row.getProperty("razorpay_plugin_properties"), Map.class));
             // Logging to check if pp is null after deserialization
             if (pp == null) {
                 LogUtil.error(getClass().getName(), null, "Deserialized PluginProperties object (pp) is null.");
@@ -156,7 +157,7 @@ public class RazorpayPaymentProcessor {
         if (rowSet != null && !rowSet.isEmpty()) {
             FormRow row = rowSet.get(0);
             Gson gson = new Gson();
-            PluginProperties pp = gson.fromJson(row.getProperty("razorpay_plugin_properties"), PluginProperties.class);
+            PluginProperties pp = toPluginProperties(gson.fromJson(row.getProperty("razorpay_plugin_properties"), Map.class));
 
             String redirectUserviewMenu = pp.getRedirectUserviewMenu();
             String redirectUserviewMenuFormID = pp.getRedirectUserviewMenuFormID();
@@ -219,6 +220,23 @@ public class RazorpayPaymentProcessor {
             LogUtil.error(getClass().getName(), e, "Error verifying Razorpay signature");
             return false;
         }
+    }
+
+    private PluginProperties toPluginProperties(Map<String, Object> ppMap) {
+        if (ppMap == null) {
+            return null;
+        }
+        PluginProperties pp = new PluginProperties();
+        pp.setApiKey((String) ppMap.get("apiKey"));
+        pp.setApiSecret((String) ppMap.get("apiSecret"));
+        pp.setProductName((String) ppMap.get("productName"));
+        pp.setCurrency((String) ppMap.get("currency"));
+        pp.setTotalAmount((String) ppMap.get("totalAmount"));
+        pp.setRedirectUserviewMenu((String) ppMap.get("redirectUserviewMenu"));
+        pp.setRedirectUserviewMenuFormID((String) ppMap.get("redirectUserviewMenuFormID"));
+        pp.setFormDefId((String) ppMap.get("formDefId"));
+        pp.setSaveFormDefId((String) ppMap.get("saveFormDefId"));
+        return pp;
     }
 
 }

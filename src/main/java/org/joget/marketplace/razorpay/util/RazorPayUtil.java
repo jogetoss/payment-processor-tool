@@ -44,7 +44,7 @@ public class RazorPayUtil {
             LogUtil.error(getClass().getName(), e, "Failed to create Razorpay client or order: " + e.getMessage());
             throw e;
         }
-        return order != null ? order.get("id") : null;
+        return order != null ? (String) order.get("id") : null;
     }
 
     public String createRazorpayPaymentLink(Map<String, Object> linkDetails, String orderId, String formDefId, String recordId) throws IOException, InterruptedException {
@@ -74,12 +74,14 @@ public class RazorPayUtil {
 
         
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-       
-        JSONObject jsonResponse = new JSONObject(response.body());
-        String shortUrl = jsonResponse.optString("short_url");
 
-      
-        return shortUrl;
+        JSONObject jsonResponse = new JSONObject(response.body());
+        if (jsonResponse.has("error")) {
+            String description = jsonResponse.getJSONObject("error").optString("description", "Unknown error");
+            throw new IOException("Razorpay payment link creation failed: " + description);
+        }
+
+        return jsonResponse.getString("short_url");
     }
 
 }

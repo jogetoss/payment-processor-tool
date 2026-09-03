@@ -2,10 +2,8 @@ package org.joget.marketplace;
 
 import com.google.gson.Gson;
 import com.stripe.Stripe;
-import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.model.checkout.Session;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +19,7 @@ import org.joget.commons.util.LogUtil;
 import org.joget.marketplace.paypal.util.PaymentUtil;
 import org.joget.marketplace.stripe.model.PluginProperties;
 import org.joget.workflow.util.WorkflowUtil;
+import org.json.JSONObject;
 
 public class StripePaymentProcessor {
 
@@ -40,13 +39,13 @@ public class StripePaymentProcessor {
                 + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=generateLink&provider=stripe"
                 + "&id=" + recordId + "&formDefId=" + formDefId;
 
-        org.joget.marketplace.stripe.model.PluginProperties pp = new org.joget.marketplace.stripe.model.PluginProperties();
-        pp.setApiKey(apiKey);
-        pp.setProductName(productName);
-        pp.setCurrency(currency);
-        pp.setTotalAmount(totalAmount);
-        pp.setRedirectUserviewMenu(redirectUserviewMenu);
-        pp.setRedirectUserviewMenuFormID(redirectUserviewMenuFormID);
+        Map<String, Object> pp = new LinkedHashMap<>();
+        pp.put("apiKey", apiKey);
+        pp.put("productName", productName);
+        pp.put("currency", currency);
+        pp.put("totalAmount", totalAmount);
+        pp.put("redirectUserviewMenu", redirectUserviewMenu);
+        pp.put("redirectUserviewMenuFormID", redirectUserviewMenuFormID);
 
         Gson gson = new Gson();
         String jsonPp = gson.toJson(pp);
@@ -74,7 +73,7 @@ public class StripePaymentProcessor {
         if (rowSet != null && !rowSet.isEmpty()) {
             row = rowSet.get(0);
             Gson gson = new Gson();
-            PluginProperties pp = gson.fromJson(row.getProperty("stripe_plugin_properties"), PluginProperties.class);
+            PluginProperties pp = toPluginProperties(gson.fromJson(row.getProperty("stripe_plugin_properties"), Map.class));
             Stripe.apiKey = pp.getApiKey();
             String redirectUserviewMenu = pp.getRedirectUserviewMenu();
             String redirectUserviewMenuFormID = pp.getRedirectUserviewMenuFormID();
@@ -96,7 +95,7 @@ public class StripePaymentProcessor {
                     String paymentUrl = util.stripeCreatePaymentLinks(priceId, formDefId, id, appId, appVersion);
                     response.sendRedirect(paymentUrl);
 
-                } catch (StripeException ex) {
+                } catch (IOException ex) {
                     LogUtil.error(getClassName(), ex, ex.getMessage());
                     response.sendRedirect(redirectURL + "&src=error");
                     return;
@@ -119,7 +118,7 @@ public class StripePaymentProcessor {
         if (rowSet != null && !rowSet.isEmpty()) {
             row = rowSet.get(0);
             Gson gson = new Gson();
-            PluginProperties pp = gson.fromJson(row.getProperty("stripe_plugin_properties"), PluginProperties.class);
+            PluginProperties pp = toPluginProperties(gson.fromJson(row.getProperty("stripe_plugin_properties"), Map.class));
 
             Stripe.apiKey = pp.getApiKey();
 
@@ -128,12 +127,13 @@ public class StripePaymentProcessor {
             String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
 
             try {
-                Session session = Session.retrieve(sessionId);
-                String paymentIntentId = session.getPaymentIntent();
-                PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
-                String paymentStatus = paymentIntent.getStatus();
+                PaymentUtil util = new PaymentUtil();
+                JSONObject session = util.stripeRetrieveCheckoutSession(sessionId);
+                String paymentIntentId = session.getString("payment_intent");
+                JSONObject paymentIntent = util.stripeRetrievePaymentIntent(paymentIntentId);
+                String paymentStatus = paymentIntent.getString("status");
 
-                String payload = gson.toJson(paymentIntent);
+                String payload = paymentIntent.toString();
 
                 // save to db
                 FormRowSet set = new FormRowSet();
@@ -160,7 +160,7 @@ public class StripePaymentProcessor {
                 }
                 
                 response.sendRedirect(redirectURL + "&src=gateway");
-            } catch (StripeException ex) {
+            } catch (IOException ex) {
                 LogUtil.error(getClassName(), ex, ex.getMessage());
                 response.sendRedirect(redirectURL + "&src=error");
                 return;
@@ -170,6 +170,17 @@ public class StripePaymentProcessor {
 
     public String getClassName() {
         return this.getClass().getName();
+    }
+
+    private PluginProperties toPluginProperties(Map<String, Object> ppMap) {
+        PluginProperties pp = new PluginProperties();
+        pp.setApiKey((String) ppMap.get("apiKey"));
+        pp.setProductName((String) ppMap.get("productName"));
+        pp.setCurrency((String) ppMap.get("currency"));
+        pp.setTotalAmount((String) ppMap.get("totalAmount"));
+        pp.setRedirectUserviewMenu((String) ppMap.get("redirectUserviewMenu"));
+        pp.setRedirectUserviewMenuFormID((String) ppMap.get("redirectUserviewMenuFormID"));
+        return pp;
     }
 
 }

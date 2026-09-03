@@ -1,26 +1,23 @@
 package org.joget.marketplace.paypal.util;
 
-import com.google.gson.Gson;
-import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentLink;
-import com.stripe.model.Price;
-import com.stripe.model.Product;
-import com.stripe.param.PaymentLinkCreateParams;
-import com.stripe.param.PriceCreateParams;
+import com.stripe.Stripe;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
@@ -100,6 +97,54 @@ public class PaymentUtil {
 
     }
 
+    private JSONObject orderToJson(Order order) {
+        JSONObject json = new JSONObject();
+        json.put("intent", order.getIntent());
+
+        JSONArray purchaseUnits = new JSONArray();
+        if (order.getPurchaseUnits() != null) {
+            for (PurchaseUnit purchaseUnit : order.getPurchaseUnits()) {
+                JSONObject purchaseUnitJson = new JSONObject();
+                purchaseUnitJson.put("reference_id", purchaseUnit.getReferenceId());
+                if (purchaseUnit.getInvoiceId() != null) {
+                    purchaseUnitJson.put("invoice_id", purchaseUnit.getInvoiceId());
+                }
+                if (purchaseUnit.getDescription() != null) {
+                    purchaseUnitJson.put("description", purchaseUnit.getDescription());
+                }
+                Amount amount = purchaseUnit.getAmount();
+                if (amount != null) {
+                    JSONObject amountJson = new JSONObject();
+                    amountJson.put("currency_code", amount.getCurrencyCode());
+                    amountJson.put("value", amount.getValue());
+                    purchaseUnitJson.put("amount", amountJson);
+                }
+                purchaseUnits.put(purchaseUnitJson);
+            }
+        }
+        json.put("purchase_units", purchaseUnits);
+
+        PaymentSource paymentSource = order.getPaymentSource();
+        if (paymentSource != null && paymentSource.getPaypal() != null) {
+            ExperienceContext ec = paymentSource.getPaypal().getExperienceContext();
+            JSONObject paypalJson = new JSONObject();
+            if (ec != null) {
+                JSONObject ecJson = new JSONObject();
+                ecJson.put("payment_method_preference", ec.getPaymentMethodPreference());
+                ecJson.put("payment_method_selected", ec.getPaymentMethodSelected());
+                ecJson.put("user_action", ec.getUserAction());
+                ecJson.put("return_url", ec.getReturnUrl());
+                ecJson.put("cancel_url", ec.getCancelUrl());
+                paypalJson.put("experience_context", ecJson);
+            }
+            JSONObject paymentSourceJson = new JSONObject();
+            paymentSourceJson.put("paypal", paypalJson);
+            json.put("payment_source", paymentSourceJson);
+        }
+
+        return json;
+    }
+
     public String generateAccessToken(String clientId, String clientSecret, String environment) {
         String bearerToken = null;
         try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -130,8 +175,7 @@ public class PaymentUtil {
         if (accessToken != null && !accessToken.isEmpty()) {
 
             Order order = util.prepareOrder(refId, properties);
-            Gson gson = new Gson();
-            String requestBody = gson.toJson(order);
+            String requestBody = orderToJson(order).toString();
 
             String url = PayPalEnvironment.getUrl(environment) + "/v2/checkout/orders";
 
@@ -219,53 +263,85 @@ public class PaymentUtil {
         appService.storeFormData(formDefId, tableName, rows, primaryKey);
     }
 
-    public String stripeCreateProducts(String productName) throws StripeException {
-        Map<String, Object> params = new HashMap<>();
-        params.put("name", productName);
+    private static final String STRIPE_API_BASE = "https://api.stripe.com/v1";
 
-        Product product = Product.create(params);
-
-        return product.getId();
+    private JSONObject stripePost(String path, List<NameValuePair> formParams) throws IOException {
+        try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(STRIPE_API_BASE + path);
+            httpPost.setHeader("Authorization", "Bearer " + Stripe.apiKey);
+            httpPost.setEntity(new UrlEncodedFormEntity(formParams));
+            CloseableHttpResponse response = httpClient.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            String responseBody = EntityUtils.toString(entity);
+            JSONObject json = new JSONObject(responseBody);
+            if (json.has("error")) {
+                throw new IOException("Stripe API error calling " + path + ": " + json.getJSONObject("error").optString("message"));
+            }
+            return json;
+        }
     }
 
-    public String stripeCreatePrices(String currency, Long totalAmount, String productId) throws StripeException {
-        PriceCreateParams params = PriceCreateParams.builder()
-                .setCurrency(currency)
-                .setUnitAmount(totalAmount)
-                .setProduct(productId)
-                .build();
-
-        Price price = Price.create(params);
-
-        return price.getId();
+    private JSONObject stripeGet(String path) throws IOException {
+        try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(STRIPE_API_BASE + path);
+            httpGet.setHeader("Authorization", "Bearer " + Stripe.apiKey);
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            HttpEntity entity = response.getEntity();
+            String responseBody = EntityUtils.toString(entity);
+            JSONObject json = new JSONObject(responseBody);
+            if (json.has("error")) {
+                throw new IOException("Stripe API error calling " + path + ": " + json.getJSONObject("error").optString("message"));
+            }
+            return json;
+        }
     }
 
-    public String stripeCreatePaymentLinks(String priceId, String formDefId, String recordId, String appId, String appVersion) throws StripeException {
+    public String stripeCreateProducts(String productName) throws IOException {
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("name", productName));
+
+        JSONObject product = stripePost("/products", params);
+
+        return product.getString("id");
+    }
+
+    public String stripeCreatePrices(String currency, Long totalAmount, String productId) throws IOException {
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("currency", currency));
+        params.add(new BasicNameValuePair("unit_amount", String.valueOf(totalAmount)));
+        params.add(new BasicNameValuePair("product", productId));
+
+        JSONObject price = stripePost("/prices", params);
+
+        return price.getString("id");
+    }
+
+    public String stripeCreatePaymentLinks(String priceId, String formDefId, String recordId, String appId, String appVersion) throws IOException {
         AppDefinition appDef = AppUtil.getCurrentAppDefinition();
 
-        PaymentLinkCreateParams params = PaymentLinkCreateParams.builder()
-                .addLineItem(
-                        PaymentLinkCreateParams.LineItem.builder()
-                                .setPrice(priceId)
-                                .setQuantity(1L)
-                                .build())
-                .setAfterCompletion(
-                        PaymentLinkCreateParams.AfterCompletion.builder()
-                                .setType(PaymentLinkCreateParams.AfterCompletion.Type.REDIRECT)
-                                .setRedirect(
-                                        PaymentLinkCreateParams.AfterCompletion.Redirect.builder()
-                                                .setUrl(getServerUrl()
-                                                        + "/jw/web/json/app/" + appDef.getAppId() + "/"
-                                                        + appDef.getVersion().toString()
-                                                        + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=success&session_id={CHECKOUT_SESSION_ID}&formDefId="
-                                                        + formDefId + "&id=" + recordId + "&provider=stripe")
-                                                .build())
-                                .build())
-                .build();
+        String redirectUrl = getServerUrl()
+                + "/jw/web/json/app/" + appDef.getAppId() + "/"
+                + appDef.getVersion().toString()
+                + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=success&session_id={CHECKOUT_SESSION_ID}&formDefId="
+                + formDefId + "&id=" + recordId + "&provider=stripe";
 
-        PaymentLink paymentLink = PaymentLink.create(params);
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("line_items[0][price]", priceId));
+        params.add(new BasicNameValuePair("line_items[0][quantity]", "1"));
+        params.add(new BasicNameValuePair("after_completion[type]", "redirect"));
+        params.add(new BasicNameValuePair("after_completion[redirect][url]", redirectUrl));
 
-        return paymentLink.getUrl();
+        JSONObject paymentLink = stripePost("/payment_links", params);
+
+        return paymentLink.getString("url");
+    }
+
+    public JSONObject stripeRetrieveCheckoutSession(String sessionId) throws IOException {
+        return stripeGet("/checkout/sessions/" + sessionId);
+    }
+
+    public JSONObject stripeRetrievePaymentIntent(String paymentIntentId) throws IOException {
+        return stripeGet("/payment_intents/" + paymentIntentId);
     }
 
 }

@@ -2,6 +2,7 @@ package org.joget.marketplace;
 
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,16 +42,16 @@ public class PayPalPaymentProcessor {
                 + "/plugin/org.joget.marketplace.PaymentProcessorTool/service?action=generateLink&provider=paypal"
                 + "&id=" + recordId + "&formDefId=" + formDefId;
 
-        PluginProperties pluginProperties = new PluginProperties();
-        pluginProperties.setEnvironment(environment);
-        pluginProperties.setClientId(clientId);
-        pluginProperties.setClientSecret(clientSecret);
-        pluginProperties.setFormDefId(formDefId);
-        pluginProperties.setProductName(productName);
-        pluginProperties.setCurrency(currency);
-        pluginProperties.setTotalAmount(totalAmount);
-        pluginProperties.setRedirectUserviewMenu(redirectUserviewMenu);
-        pluginProperties.setRedirectUserviewMenuFormID(redirectUserviewMenuFormID);
+        Map<String, Object> pluginProperties = new LinkedHashMap<>();
+        pluginProperties.put("environment", environment);
+        pluginProperties.put("clientId", clientId);
+        pluginProperties.put("clientSecret", clientSecret);
+        pluginProperties.put("formDefId", formDefId);
+        pluginProperties.put("productName", productName);
+        pluginProperties.put("currency", currency);
+        pluginProperties.put("totalAmount", totalAmount);
+        pluginProperties.put("redirectUserviewMenu", redirectUserviewMenu);
+        pluginProperties.put("redirectUserviewMenuFormID", redirectUserviewMenuFormID);
 
         String pp = generatePluginProperties(pluginProperties);
 
@@ -79,7 +80,7 @@ public class PayPalPaymentProcessor {
         FormRow formRow = frs.get(0);
         String pp = (String) formRow.get("paypal_plugin_properties");
         Gson gson = new Gson();
-        PluginProperties props = gson.fromJson(pp, PluginProperties.class);
+        PluginProperties props = toPluginProperties(gson.fromJson(pp, Map.class));
         String redirectUserviewMenu = props.getRedirectUserviewMenu();
         String redirectUserviewMenuFormID = props.getRedirectUserviewMenuFormID();
         String redirectURL = PaymentUtil.getServerUrl() + "/jw/web/userview/" + appId + "/" + redirectUserviewMenu + "/_/" + redirectUserviewMenuFormID + "?id=" + id;
@@ -105,7 +106,7 @@ public class PayPalPaymentProcessor {
         FormRow formRow = frs.get(0);
         String pp = (String) formRow.get("paypal_plugin_properties");
         Gson gson = new Gson();
-        PluginProperties props = gson.fromJson(pp, PluginProperties.class);
+        PluginProperties props = toPluginProperties(gson.fromJson(pp, Map.class));
         String clientId = props.getClientId();
         String clientSecret = props.getClientSecret();
         String environment = props.getEnvironment();
@@ -154,7 +155,7 @@ public class PayPalPaymentProcessor {
         FormRow formRow = frs.get(0);
         String pp = (String) formRow.get("plugin_properties");
         Gson gson = new Gson();
-        PluginProperties props = gson.fromJson(pp, PluginProperties.class);
+        PluginProperties props = toPluginProperties(gson.fromJson(pp, Map.class));
 
         String redirectUserviewMenu = props.getRedirectUserviewMenu();
         String redirectUserviewMenuFormID = props.getRedirectUserviewMenuFormID();
@@ -162,10 +163,26 @@ public class PayPalPaymentProcessor {
         response.sendRedirect(redirectURL + "&src=cancelled");
     }
 
-    private String generatePluginProperties(PluginProperties pluginProperties) {
+    private String generatePluginProperties(Map<String, Object> pluginProperties) {
         Gson gson = new Gson();
         String jsonString = gson.toJson(pluginProperties);
         return jsonString;
+    }
+
+    private PluginProperties toPluginProperties(Map<String, Object> ppMap) {
+        PluginProperties props = new PluginProperties();
+        props.setEnvironment((String) ppMap.get("environment"));
+        props.setClientId((String) ppMap.get("clientId"));
+        props.setClientSecret((String) ppMap.get("clientSecret"));
+        props.setFormDefId((String) ppMap.get("formDefId"));
+        props.setSaveFormDefId((String) ppMap.get("saveFormDefId"));
+        props.setProductName((String) ppMap.get("productName"));
+        props.setCurrency((String) ppMap.get("currency"));
+        props.setTotalAmount((String) ppMap.get("totalAmount"));
+        props.setDescription((String) ppMap.get("description"));
+        props.setRedirectUserviewMenu((String) ppMap.get("redirectUserviewMenu"));
+        props.setRedirectUserviewMenuFormID((String) ppMap.get("redirectUserviewMenuFormID"));
+        return props;
     }
 
 }
